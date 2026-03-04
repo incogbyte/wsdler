@@ -1,5 +1,9 @@
 package burp;
 
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.ui.editor.EditorOptions;
+import burp.api.montoya.ui.editor.HttpRequestEditor;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,35 +12,33 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
-public class WSDLTab extends AbstractTableModel implements IMessageEditorController {
+public class WSDLTab extends AbstractTableModel {
 
-    private final List<WSDLEntry> entries = new ArrayList<WSDLEntry>();
+    private final List<WSDLEntry> entries = new ArrayList<>();
     public WSDLTable wsdlTable;
-    public EachRowEditor rowEditor = new EachRowEditor(wsdlTable);
-    private IMessageEditor requestViewer;
-    private IHttpRequestResponse currentlyDisplayedItem;
+    public EachRowEditor rowEditor;
+    private HttpRequestEditor requestViewer;
     JSplitPane splitPane;
     JTabbedPane tabbedPane;
 
-    public WSDLTab(final IBurpExtenderCallbacks callbacks, JTabbedPane tabbedPane, String request) {
+    public WSDLTab(MontoyaApi api, JTabbedPane tabbedPane, String request) {
         this.tabbedPane = tabbedPane;
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         wsdlTable = new WSDLTable(WSDLTab.this);
         wsdlTable.setAutoCreateRowSorter(true);
 
-                rowEditor = new EachRowEditor(wsdlTable);
+        rowEditor = new EachRowEditor(wsdlTable);
         JScrollPane scrollPane = new JScrollPane(wsdlTable);
 
         splitPane.setLeftComponent(scrollPane);
 
         JTabbedPane tabs = new JTabbedPane();
-        requestViewer = callbacks.createMessageEditor(WSDLTab.this, false);
-        tabs.addTab("Request", requestViewer.getComponent());
+        requestViewer = api.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY);
+        tabs.addTab("Request", requestViewer.uiComponent());
         splitPane.setTopComponent(scrollPane);
         splitPane.setBottomComponent(tabs);
         tabbedPane.add(request, splitPane);
         tabbedPane.setTabComponentAt(WSDLParserTab.tabCount - WSDLParserTab.removedTabCount, new ButtonTabComponent(tabbedPane));
-
     }
 
     public void addEntry(WSDLEntry entry) {
@@ -94,18 +96,6 @@ public class WSDLTab extends AbstractTableModel implements IMessageEditorControl
         return col >= 2;
     }
 
-    public byte[] getRequest() {
-        return currentlyDisplayedItem.getRequest();
-    }
-
-    public byte[] getResponse() {
-        return currentlyDisplayedItem.getResponse();
-    }
-
-    public IHttpService getHttpService() {
-        return currentlyDisplayedItem.getHttpService();
-    }
-
     private class WSDLTable extends JTable {
 
         public WSDLTable(TableModel tableModel) {
@@ -115,8 +105,7 @@ public class WSDLTab extends AbstractTableModel implements IMessageEditorControl
         public void changeSelection(int row, int col, boolean toggle, boolean extend) {
 
             WSDLEntry wsdlEntry = entries.get(super.convertRowIndexToModel(row));
-            requestViewer.setMessage(wsdlEntry.request, true);
-            currentlyDisplayedItem = wsdlEntry.requestResponse;
+            requestViewer.setRequest(wsdlEntry.request);
             super.changeSelection(row, col, toggle, extend);
         }
 
@@ -133,4 +122,4 @@ public class WSDLTab extends AbstractTableModel implements IMessageEditorControl
         }
     }
 
- }
+}

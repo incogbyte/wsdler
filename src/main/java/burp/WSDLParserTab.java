@@ -1,43 +1,30 @@
 package burp;
 
-import java.awt.*;
+import burp.api.montoya.MontoyaApi;
 
+import java.awt.*;
 import javax.swing.*;
 
-public class WSDLParserTab implements ITab {
+public class WSDLParserTab {
 
     JTabbedPane tabs;
-    private IBurpExtenderCallbacks callbacks;
+    private MontoyaApi api;
     static int tabCount = 0;
     static int removedTabCount = 0;
 
-    public WSDLParserTab(final IBurpExtenderCallbacks callbacks) {
-        this.callbacks = callbacks;
-
+    public WSDLParserTab(MontoyaApi api) {
+        this.api = api;
         tabs = new JTabbedPane();
-
-        callbacks.customizeUiComponent(tabs);
-
-        callbacks.addSuiteTab(WSDLParserTab.this);
-
     }
 
     public WSDLTab createTab(String request) {
-
-        WSDLTab wsdltab = new WSDLTab((callbacks), tabs, request);
+        WSDLTab wsdltab = new WSDLTab(api, tabs, request);
         tabs.setSelectedIndex(tabCount - removedTabCount);
         tabCount++;
-
         return wsdltab;
-    }
-
-    public String getTabCaption() {
-        return "Wsdler";
     }
 
     public Component getUiComponent() {
         return tabs;
     }
-
-
 }
